@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幼稚園児向け 計算ドリル</title>
+    <style>
+        /* A4サイズに合わせた基本設定 */
+        @page {
+            size: A4;
+            margin: 10mm; /* 印刷時の余白をさらに詰める */
+        }
+        body {
+            font-family: 'Arial', 'sans-serif';
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10mm; /* 全体のパディングを調整 */
+            box-sizing: border-box;
+            line-height: 1.4; /* 行の高さをさらに詰める */
+            color: #333; /* 全体の文字色 */
+        }
+        .container {
+            width: 100%;
+            max-width: 210mm; /* A4の幅 */
+            padding: 0; /* コンテナ内の垂直パディングをなくす */
+            text-align: center;
+        }
+        h1 {
+            font-size: 30pt; /* 大きめのフォントサイズを調整 */
+            margin-top: 0; /* 上の余白をなくす */
+            margin-bottom: 6px; /* ヘッダー下の余白を微調整 */
+        }
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2列 */
+            gap: 15px 30px; /* 縦横の隙間をさらに詰める */
+            justify-content: center;
+            width: 90%; /* 中央に配置、幅をさらに広めに */
+            margin: 0 auto;
+        }
+        .problem {
+            font-size: 24pt; /* 問題のフォントサイズを調整 */
+            padding: 4px; /* パディングを微調整 */
+            border-bottom: 2px solid #ccc; /* 下線 */
+            text-align: left; /* 左揃え */
+            white-space: nowrap; /* 改行防止 */
+        }
+        .problem span {
+            display: inline-block;
+            min-width: 45px; /* 数字の幅を確保 */
+            text-align: right;
+        }
+        .instructions {
+            font-size: 14pt; /* 説明文のフォントサイズを調整 */
+            margin-bottom: 10px; /* 説明文の余白を微調整 */
+            color: #555;
+        }
+
+        /* 新しい選択ボタンのスタイル */
+        .selection-group {
+            margin-bottom: 8px; /* 各選択グループ間の余白を調整 */
+            font-size: 16pt; /* フォントサイズを調整 */
+            color: #555;
+        }
+        .selection-group button {
+            padding: 5px 10px; /* パディングを調整 */
+            font-size: 13pt; /* フォントサイズを調整 */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            margin: 0 4px; /* マージンを調整 */
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        .selection-group button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .selection-group button:hover:not(.active) {
+            background-color: #e0e0e0;
+        }
+
+        .addend-selection {
+            display: flex; /* Flexboxで横並びにする */
+            align-items: center; /* 垂直方向中央揃え */
+            justify-content: center; /* 水平方向中央揃え */
+            margin-bottom: 8px; /* 足す数字選択の余白を調整 */
+            font-size: 16pt; /* フォントサイズを調整 */
+            color: #555;
+        }
+        .addend-selection select {
+            font-size: 16pt; /* フォントサイズを調整 */
+            padding: 3px 7px; /* パディングを調整 */
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-left: 8px; /* マージンを調整 */
+            margin-right: 8px; /* ボタンとの間にマージンを追加 */
+        }
+        .refresh-button {
+            padding: 5px 10px; /* パディングを調整 */
+            font-size: 13pt; /* フォントサイズを調整 */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .refresh-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .print-button {
+            margin-top: 10px; /* ボタンの余白を調整 */
+            padding: 8px 16px; /* パディングを調整 */
+            font-size: 15pt; /* フォントサイズを維持 */
+            background-color: #4CAF50; /* ボタンの色 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+        .print-button:hover {
+            background-color: #45a049;
+        }
+
+        /* 印刷時に不要な要素を非表示にする設定 */
+        @media print {
+            body {
+                background: none;
+                color: black;
+            }
+            .selection-group, /* 新しい選択グループも印刷時に非表示 */
+            .addend-selection,
+            .print-button,
+            .refresh-button { /* 再出力ボタンも印刷時に非表示 */
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>計算ドリル</h1>
+        <p class="instructions">
+            かずをかぞえて、こたえをかこう！<br>
+            ぜんぶ同じ数字を足すよ！
+        </p>
+
+        <!-- 演算選択 -->
+        <div class="selection-group">
+            <button id="addOperation" class="active">足し算</button>
+            <button id="subtractOperation">引き算</button>
+        </div>
+
+        <!-- 難易度選択 -->
+        <div class="selection-group">
+            <button id="level1Button" class="active">レベル1 (1-10)</button>
+            <button id="level2Button">レベル2 (1-20)</button>
+            <button id="level3Button">レベル3 (ランダム)</button>
+        </div>
+
+        <!-- 足す（引く）数字の選択と再出力ボタン -->
+        <div class="addend-selection">
+            <span id="addendSelectLabel">足す（引く）数字を選んでね:</span>
+            <select id="selectAddend">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option> <!-- デフォルトは+3 -->
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+            </select>
+            <button id="refreshProblemsButton" class="refresh-button">再出力</button>
+        </div>
+
+        <!-- 問題を動的に生成するためのコンテナ -->
+        <div id="problems-container" class="problem-grid">
+            <!-- JavaScriptで問題がここに追加されます -->
+        </div>
+
+        <!-- 印刷ボタン -->
+        <button class="print-button" onclick="window.print()">このドリルを印刷する</button>
+    </div>
+
+    <script>
+        // Helper function to shuffle an array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const problemsContainer = document.getElementById('problems-container');
+            const selectAddend = document.getElementById('selectAddend');
+            const addOperationButton = document.getElementById('addOperation');
+            const subtractOperationButton = document.getElementById('subtractOperation');
+            const level1Button = document.getElementById('level1Button');
+            const level2Button = document.getElementById('level2Button');
+            const level3Button = document.getElementById('level3Button'); // New Level 3 button
+            const refreshProblemsButton = document.getElementById('refreshProblemsButton'); // 再出力ボタン
+            const instructionsText = document.querySelector('.instructions');
+            const addendSelectContainer = document.querySelector('.addend-selection'); // 足す（引く）数字選択のコンテナ
+
+            let currentOperation = 'add'; // 'add' or 'subtract'
+            let currentDifficulty = 'level1'; // 'level1', 'level2', or 'level3' (default to level1)
+
+            // Function to update active state of buttons
+            function updateActiveButton(buttons, activeId) {
+                buttons.forEach(btn => {
+                    if (btn.id === activeId) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            // Function to update instructions based on operation
+            function updateInstructions() {
+                if (currentOperation === 'add') {
+                    instructionsText.innerHTML = `かずをかぞえて、こたえをかこう！<br>ぜんぶ同じ数字を足すよ！`;
+                } else {
+                    instructionsText.innerHTML = `かずをかぞえて、こたえをかこう！<br>ぜんぶ同じ数字を引くよ！`;
+                }
+            }
+
+            // Function to update visibility of addend select based on difficulty
+            function updateAddendSelectVisibility() {
+                if (currentDifficulty === 'level3') {
+                    addendSelectContainer.style.display = 'none'; // Hide for Level 3
+                } else {
+                    addendSelectContainer.style.display = 'flex'; // Show for Level 1/2
+                }
+            }
+
+            // 問題を生成する関数
+            function generateProblems() {
+                problemsContainer.innerHTML = ''; // Clear container
+                const selectedOperand2 = parseInt(selectAddend.value); // Selected from dropdown (used for L1/L2)
+                const operator = currentOperation === 'add' ? '+' : '-';
+                const numberOfProblems = 20;
+
+                let generatedProblems = []; // Stores {left, right, op} for final display
+                let lastTwoLeftOperands = []; // To prevent immediate repetition of left operand
+
+                for (let k = 0; k < numberOfProblems; k++) {
+                    let currentLeftOperand;
+                    let currentRightOperand;
+
+                    // Determine the right operand for the current problem
+                    if (currentDifficulty === 'level3') {
+                        currentRightOperand = Math.floor(Math.random() * 9) + 1; // Random 1-9 for Level 3
+                    } else {
+                        currentRightOperand = selectedOperand2; // Fixed from dropdown for L1/L2
+                    }
+
+                    // Determine the base range of numbers for the left operand
+                    let minBaseRange, maxBaseRange;
+                    if (currentDifficulty === 'level1') {
+                        minBaseRange = 1;
+                        maxBaseRange = 10;
+                    } else { // Level 2 or Level 3
+                        minBaseRange = 1;
+                        maxBaseRange = 20;
+                    }
+
+                    // Build a temporary list of eligible left operands for *this specific pick*
+                    let candidatesForThisPick = [];
+                    for (let i = minBaseRange; i <= maxBaseRange; i++) {
+                        candidatesForThisPick.push(i);
+                    }
+
+                    // Apply subtraction constraint: left operand must be >= right operand
+                    let validNumbersForOperation = candidatesForThisPick.filter(num => {
+                        if (currentOperation === 'subtract') {
+                            return num >= currentRightOperand;
+                        }
+                        return true;
+                    });
+
+                    if (validNumbersForOperation.length === 0) {
+                        // Display error if no valid numbers can be picked
+                        const noProblemDiv = document.createElement('div');
+                        noProblemDiv.style.gridColumn = '1 / -1'; // Span across all columns
+                        noProblemDiv.style.textAlign = 'center';
+                        noProblemDiv.style.fontSize = '18pt';
+                        noProblemDiv.style.padding = '20px';
+                        noProblemDiv.style.color = '#ff0000';
+                        noProblemDiv.innerHTML = `この設定では問題を作成できません。引く数字を小さくしてください。`;
+                        problemsContainer.appendChild(noProblemDiv);
+                        return; // Stop problem generation
+                    }
+
+                    // Apply "no same number in last two" constraint for the left operand
+                    let finalCandidatesForPick = validNumbersForOperation.filter(num => !lastTwoLeftOperands.includes(num));
+
+                    if (finalCandidatesForPick.length > 0) {
+                        currentLeftOperand = finalCandidatesForPick[Math.floor(Math.random() * finalCandidatesForPick.length)];
+                    } else {
+                        // Fallback: If avoiding last two is impossible, pick any valid number
+                        currentLeftOperand = validNumbersForOperation[Math.floor(Math.random() * validNumbersForOperation.length)];
+                    }
+
+                    generatedProblems.push({
+                        left: currentLeftOperand,
+                        right: currentRightOperand,
+                        op: operator
+                    });
+
+                    // Update lastTwoLeftOperands
+                    lastTwoLeftOperands.push(currentLeftOperand);
+                    if (lastTwoLeftOperands.length > 2) {
+                        lastTwoLeftOperands.shift();
+                    }
+                }
+
+                // --- Special Handling for Level 1 Addition (1-10 x2 guarantee) ---
+                // After generating 20 numbers with basic random and non-consecutive logic,
+                // for Level 1 Addition, we need to ensure each number from 1-10 appears exactly twice.
+                if (currentDifficulty === 'level1' && currentOperation === 'add') {
+                    let requiredNumbers = [];
+                    for (let i = 1; i <= 10; i++) {
+                        requiredNumbers.push(i);
+                        requiredNumbers.push(i);
+                    }
+                    shuffleArray(requiredNumbers); // Shuffle the fixed 1-10 x2 pool
+
+                    // Replace the generated left operands with the strictly controlled list
+                    // And update right operands for this specific case (they are fixed by dropdown)
+                    generatedProblems = requiredNumbers.map(num => ({
+                        left: num,
+                        right: selectedOperand2,
+                        op: operator
+                    }));
+                }
+
+
+                // Display the generated problems
+                generatedProblems.forEach(problem => {
+                    const problemDiv = document.createElement('div');
+                    problemDiv.classList.add('problem');
+                    problemDiv.innerHTML = `<span>${problem.left}</span> ${problem.op} ${problem.right} = _______`;
+                    problemsContainer.appendChild(problemDiv);
+                });
+            }
+
+            // Event Listeners for operation buttons
+            addOperationButton.addEventListener('click', () => {
+                currentOperation = 'add';
+                updateActiveButton([addOperationButton, subtractOperationButton], 'addOperation');
+                updateInstructions();
+                generateProblems();
+            });
+
+            subtractOperationButton.addEventListener('click', () => {
+                currentOperation = 'subtract';
+                updateActiveButton([addOperationButton, subtractOperationButton], 'subtractOperation');
+                updateInstructions();
+                generateProblems();
+            });
+
+            // Event Listeners for difficulty buttons
+            level1Button.addEventListener('click', () => {
+                currentDifficulty = 'level1';
+                updateActiveButton([level1Button, level2Button, level3Button], 'level1Button');
+                updateAddendSelectVisibility(); // Update visibility
+                generateProblems();
+            });
+
+            level2Button.addEventListener('click', () => {
+                currentDifficulty = 'level2';
+                updateActiveButton([level1Button, level2Button, level3Button], 'level2Button');
+                updateAddendSelectVisibility(); // Update visibility
+                generateProblems();
+            });
+
+            level3Button.addEventListener('click', () => { // New Level 3 button
+                currentDifficulty = 'level3';
+                updateActiveButton([level1Button, level2Button, level3Button], 'level3Button');
+                updateAddendSelectVisibility(); // Update visibility
+                generateProblems();
+            });
+
+            // Event Listener for the addend selection
+            selectAddend.addEventListener('change', generateProblems);
+
+            // Event Listener for the refresh button
+            refreshProblemsButton.addEventListener('click', generateProblems);
+
+            // Initial calls on DOMContentLoaded
+            updateActiveButton([level1Button, level2Button, level3Button], 'level1Button'); // デフォルトはレベル1をアクティブに
+            updateAddendSelectVisibility(); // Initial visibility
+            generateProblems();
+            updateInstructions();
+        });
+    </script>
+</body>
+</html>
