@@ -8,7 +8,7 @@
         /* A4サイズに合わせた基本設定 */
         @page {
             size: A4;
-            margin: 10mm; /* 印刷時の余白をさらに詰める */
+            margin: 10mm; /* 印刷時の余白 */
         }
         body {
             font-family: 'Arial', 'sans-serif';
@@ -18,116 +18,143 @@
             justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 10mm; /* 全体のパディングを調整 */
+            padding: 10mm; /* 全体のパディング */
             box-sizing: border-box;
-            line-height: 1.4; /* 行の高さをさらに詰める */
-            color: #333; /* 全体の文字色 */
+            line-height: 1.3; /* 行の高さを詰める */
+            color: #333; /* 標準的な文字色 */
+            background-color: #ffffff; /* 白い背景 */
         }
         .container {
             width: 100%;
             max-width: 210mm; /* A4の幅 */
-            padding: 0; /* コンテナ内の垂直パディングをなくす */
+            padding: 2mm; /* 内側のパディングを削減 */
             text-align: center;
+            background-color: #ffffff; /* 白い背景 */
+            border-radius: 0; /* 角丸を削除 */
+            box-shadow: none; /* 影を削除 */
         }
         h1 {
-            font-size: 30pt; /* 大きめのフォントサイズを調整 */
-            margin-top: 0; /* 上の余白をなくす */
-            margin-bottom: 6px; /* ヘッダー下の余白を微調整 */
+            font-size: 30pt;
+            margin-top: 5px;
+            margin-bottom: 8px;
+            color: #333;
+            text-shadow: none;
         }
         .problem-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2列 */
-            gap: 15px 30px; /* 縦横の隙間をさらに詰める */
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px 30px;
             justify-content: center;
-            width: 90%; /* 中央に配置、幅をさらに広めに */
+            width: 90%;
             margin: 0 auto;
         }
         .problem {
-            font-size: 24pt; /* 問題のフォントサイズを調整 */
-            padding: 4px; /* パディングを微調整 */
-            border-bottom: 2px solid #ccc; /* 下線 */
-            text-align: left; /* 左揃え */
-            white-space: nowrap; /* 改行防止 */
+            font-size: 24pt;
+            padding: 4px;
+            border-bottom: 2px solid #ccc; /* 標準的なグレーの下線 */
+            text-align: left;
+            white-space: nowrap;
+            color: #333;
         }
         .problem span {
             display: inline-block;
-            min-width: 45px; /* 数字の幅を確保 */
+            min-width: 45px;
             text-align: right;
+            color: #333;
         }
         .instructions {
-            font-size: 14pt; /* 説明文のフォントサイズを調整 */
-            margin-bottom: 10px; /* 説明文の余白を微調整 */
+            font-size: 14pt;
+            margin-bottom: 10px;
             color: #555;
+            font-weight: normal; /* 太字を削除 */
         }
 
-        /* 新しい選択ボタンのスタイル */
+        /* 選択ボタンのスタイル */
         .selection-group {
-            margin-bottom: 8px; /* 各選択グループ間の余白を調整 */
-            font-size: 16pt; /* フォントサイズを調整 */
+            margin-bottom: 8px;
+            font-size: 16pt;
             color: #555;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
         }
         .selection-group button {
-            padding: 5px 10px; /* パディングを調整 */
-            font-size: 13pt; /* フォントサイズを調整 */
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f0f0f0;
+            padding: 5px 10px;
+            font-size: 13pt;
+            border: 1px solid #ccc; /* 標準的なボーダー */
+            border-radius: 5px; /* 標準的な角丸 */
+            background-color: #f0f0f0; /* 薄いグレーの背景 */
+            color: #333;
             cursor: pointer;
-            margin: 0 4px; /* マージンを調整 */
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            margin: 4px;
+            box-shadow: none; /* 影を削除 */
+            transition: none; /* アニメーションを削除 */
+            text-shadow: none;
         }
         .selection-group button.active {
-            background-color: #007bff;
+            background-color: #007bff; /* 標準的なアクティブ色 */
             color: white;
             border-color: #007bff;
+            box-shadow: none;
+            transform: none;
         }
         .selection-group button:hover:not(.active) {
-            background-color: #e0e0e0;
+            background-color: #e0e0e0; /* ホバー時の背景色 */
+            transform: none;
         }
 
         .addend-selection {
-            display: flex; /* Flexboxで横並びにする */
-            align-items: center; /* 垂直方向中央揃え */
-            justify-content: center; /* 水平方向中央揃え */
-            margin-bottom: 8px; /* 足す数字選択の余白を調整 */
-            font-size: 16pt; /* フォントサイズを調整 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 16pt;
             color: #555;
         }
         .addend-selection select {
-            font-size: 16pt; /* フォントサイズを調整 */
-            padding: 3px 7px; /* パディングを調整 */
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            margin-left: 8px; /* マージンを調整 */
-            margin-right: 8px; /* ボタンとの間にマージンを追加 */
+            font-size: 15pt;
+            padding: 3px 7px;
+            border-radius: 5px; /* 標準的な角丸 */
+            border: 1px solid #ccc; /* 標準的なボーダー */
+            background-color: #f0f0f0;
+            margin-left: 8px;
+            margin-right: 8px;
+            color: #333;
         }
         .refresh-button {
-            padding: 5px 10px; /* パディングを調整 */
-            font-size: 13pt; /* フォントサイズを調整 */
+            padding: 5px 10px;
+            font-size: 13pt;
             border: 1px solid #ccc;
             border-radius: 5px;
             background-color: #f0f0f0;
+            color: #333;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            box-shadow: none;
+            transition: none;
+            text-shadow: none;
         }
         .refresh-button:hover {
             background-color: #e0e0e0;
+            transform: none;
         }
 
         .print-button {
-            margin-top: 10px; /* ボタンの余白を調整 */
-            padding: 8px 16px; /* パディングを調整 */
-            font-size: 15pt; /* フォントサイズを維持 */
-            background-color: #4CAF50; /* ボタンの色 */
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16pt;
+            background-color: #007bff; /* 標準的なボタン色 */
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px; /* 標準的な角丸 */
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease;
+            box-shadow: none;
+            transition: none;
+            text-shadow: none;
+            font-weight: bold;
         }
         .print-button:hover {
-            background-color: #45a049;
+            background-color: #0056b3; /* ホバー時の色 */
+            transform: none;
         }
 
         /* 印刷時に不要な要素を非表示にする設定 */
@@ -136,11 +163,26 @@
                 background: none;
                 color: black;
             }
-            .selection-group, /* 新しい選択グループも印刷時に非表示 */
+            .selection-group,
             .addend-selection,
             .print-button,
-            .refresh-button { /* 再出力ボタンも印刷時に非表示 */
+            .refresh-button {
                 display: none;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+            }
+            h1 {
+                text-shadow: none;
+                color: black;
+            }
+            .problem, .problem span, .instructions {
+                color: black;
+            }
+            .problem {
+                border-bottom: 2px solid black;
             }
         }
     </style>
@@ -161,9 +203,9 @@
 
         <!-- 難易度選択 -->
         <div class="selection-group">
-            <button id="level1Button" class="active">レベル1 (1-10)</button>
-            <button id="level2Button">レベル2 (1-20)</button>
-            <button id="level3Button">レベル3 (ランダム)</button>
+            <button id="level1Button" class="active">レベル1</button>
+            <button id="level2Button">レベル2</button>
+            <button id="level3Button">レベル3</button>
         </div>
 
         <!-- 足す（引く）数字の選択と再出力ボタン -->
@@ -255,6 +297,16 @@
                 let generatedProblems = []; // Stores {left, right, op} for final display
                 let lastTwoLeftOperands = []; // To prevent immediate repetition of left operand
 
+                // If Level 1 Addition, prepare the fixed pool [1,1,2,2,...,10,10]
+                let level1AddFixedPool = [];
+                if (currentDifficulty === 'level1' && currentOperation === 'add') {
+                    for (let i = 1; i <= 10; i++) {
+                        level1AddFixedPool.push(i);
+                        level1AddFixedPool.push(i);
+                    }
+                    shuffleArray(level1AddFixedPool); // Shuffle this specific pool once
+                }
+
                 for (let k = 0; k < numberOfProblems; k++) {
                     let currentLeftOperand;
                     let currentRightOperand;
@@ -266,20 +318,24 @@
                         currentRightOperand = selectedOperand2; // Fixed from dropdown for L1/L2
                     }
 
-                    // Determine the base range of numbers for the left operand
-                    let minBaseRange, maxBaseRange;
-                    if (currentDifficulty === 'level1') {
-                        minBaseRange = 1;
-                        maxBaseRange = 10;
-                    } else { // Level 2 or Level 3
-                        minBaseRange = 1;
-                        maxBaseRange = 20;
-                    }
-
                     // Build a temporary list of eligible left operands for *this specific pick*
                     let candidatesForThisPick = [];
-                    for (let i = minBaseRange; i <= maxBaseRange; i++) {
-                        candidatesForThisPick.push(i);
+                    if (currentDifficulty === 'level1' && currentOperation === 'add') {
+                        // For Level 1 Addition, draw from the remaining fixed pool
+                        candidatesForThisPick = [...level1AddFixedPool];
+                    } else {
+                        // For other modes, generate from the base range
+                        let minBaseRange, maxBaseRange;
+                        if (currentDifficulty === 'level1') { // This covers Level 1 Subtract
+                            minBaseRange = 1;
+                            maxBaseRange = 10;
+                        } else { // Level 2 or Level 3
+                            minBaseRange = 1;
+                            maxBaseRange = 20;
+                        }
+                        for (let i = minBaseRange; i <= maxBaseRange; i++) {
+                            candidatesForThisPick.push(i);
+                        }
                     }
 
                     // Apply subtraction constraint: left operand must be >= right operand
@@ -291,7 +347,7 @@
                     });
 
                     if (validNumbersForOperation.length === 0) {
-                        // Display error if no valid numbers can be picked
+                        // Display error if no valid numbers can be picked for subtraction
                         const noProblemDiv = document.createElement('div');
                         noProblemDiv.style.gridColumn = '1 / -1'; // Span across all columns
                         noProblemDiv.style.textAlign = 'center';
@@ -309,7 +365,7 @@
                     if (finalCandidatesForPick.length > 0) {
                         currentLeftOperand = finalCandidatesForPick[Math.floor(Math.random() * finalCandidatesForPick.length)];
                     } else {
-                        // Fallback: If avoiding last two is impossible, pick any valid number
+                        // Fallback: If avoiding last two is impossible (e.g., small pool), pick any valid number
                         currentLeftOperand = validNumbersForOperation[Math.floor(Math.random() * validNumbersForOperation.length)];
                     }
 
@@ -319,33 +375,20 @@
                         op: operator
                     });
 
+                    // For Level 1 Addition, remove the chosen number from its unique pool
+                    if (currentDifficulty === 'level1' && currentOperation === 'add') {
+                         const indexInPool = level1AddFixedPool.indexOf(currentLeftOperand);
+                         if (indexInPool > -1) {
+                             level1AddFixedPool.splice(indexInPool, 1);
+                         }
+                    }
+
                     // Update lastTwoLeftOperands
                     lastTwoLeftOperands.push(currentLeftOperand);
                     if (lastTwoLeftOperands.length > 2) {
                         lastTwoLeftOperands.shift();
                     }
-                }
-
-                // --- Special Handling for Level 1 Addition (1-10 x2 guarantee) ---
-                // After generating 20 numbers with basic random and non-consecutive logic,
-                // for Level 1 Addition, we need to ensure each number from 1-10 appears exactly twice.
-                if (currentDifficulty === 'level1' && currentOperation === 'add') {
-                    let requiredNumbers = [];
-                    for (let i = 1; i <= 10; i++) {
-                        requiredNumbers.push(i);
-                        requiredNumbers.push(i);
-                    }
-                    shuffleArray(requiredNumbers); // Shuffle the fixed 1-10 x2 pool
-
-                    // Replace the generated left operands with the strictly controlled list
-                    // And update right operands for this specific case (they are fixed by dropdown)
-                    generatedProblems = requiredNumbers.map(num => ({
-                        left: num,
-                        right: selectedOperand2,
-                        op: operator
-                    }));
-                }
-
+                } // End of for loop for generating 20 problems
 
                 // Display the generated problems
                 generatedProblems.forEach(problem => {
