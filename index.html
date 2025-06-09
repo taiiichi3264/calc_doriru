@@ -42,12 +42,20 @@
         }
         .problem-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, 1fr); /* デフォルトは2列 */
             gap: 15px 30px;
             justify-content: center;
             width: 90%;
             margin: 0 auto;
         }
+        /* レベル1またはレベル2掛け算選択時の縦一列レイアウト */
+        .problem-grid.vertical-layout {
+            grid-template-columns: 1fr; /* 1列に強制 */
+            width: 60%; /* 幅を狭めて中央に寄せる */
+            max-width: 150mm; /* 広がりすぎないように最大幅を設定 */
+            gap: 10px; /* 縦方向の隙間を調整 */
+        }
+
         .problem {
             font-size: 24pt;
             padding: 4px;
@@ -102,6 +110,14 @@
             background-color: #e0e0e0; /* ホバー時の背景色 */
             transform: none;
         }
+        .selection-group button:disabled {
+            opacity: 0.5; /* 無効時は半透明 */
+            cursor: not-allowed;
+            background-color: #f0f0f0;
+            color: #aaa;
+            border-color: #eee;
+        }
+
 
         .addend-selection {
             display: flex;
@@ -199,6 +215,7 @@
         <div class="selection-group">
             <button id="addOperation" class="active">足し算</button>
             <button id="subtractOperation">引き算</button>
+            <button id="multiplyOperation">掛け算</button>
         </div>
 
         <!-- 難易度選択 -->
@@ -206,9 +223,11 @@
             <button id="level1Button" class="active">レベル1</button>
             <button id="level2Button">レベル2</button>
             <button id="level3Button">レベル3</button>
+            <button id="level4Button" disabled>レベル4</button>
+            <button id="level5Button" disabled>レベル5</button>
         </div>
 
-        <!-- 足す（引く）数字の選択と再出力ボタン -->
+        <!-- 足す（引く/かける）数字の選択と再出力ボタン -->
         <div class="addend-selection">
             <span id="addendSelectLabel">足す（引く）数字を選んでね:</span>
             <select id="selectAddend">
@@ -248,17 +267,21 @@
             const selectAddend = document.getElementById('selectAddend');
             const addOperationButton = document.getElementById('addOperation');
             const subtractOperationButton = document.getElementById('subtractOperation');
+            const multiplyOperationButton = document.getElementById('multiplyOperation');
             const level1Button = document.getElementById('level1Button');
             const level2Button = document.getElementById('level2Button');
-            const level3Button = document.getElementById('level3Button'); // New Level 3 button
-            const refreshProblemsButton = document.getElementById('refreshProblemsButton'); // 再出力ボタン
+            const level3Button = document.getElementById('level3Button');
+            const level4Button = document.getElementById('level4Button');
+            const level5Button = document.getElementById('level5Button');
+            const refreshProblemsButton = document.getElementById('refreshProblemsButton');
             const instructionsText = document.querySelector('.instructions');
-            const addendSelectContainer = document.querySelector('.addend-selection'); // 足す（引く）数字選択のコンテナ
+            const addendSelectLabel = document.getElementById('addendSelectLabel');
+            const addendSelectContainer = document.querySelector('.addend-selection');
 
-            let currentOperation = 'add'; // 'add' or 'subtract'
-            let currentDifficulty = 'level1'; // 'level1', 'level2', or 'level3' (default to level1)
+            let currentOperation = 'add';
+            let currentDifficulty = 'level1';
 
-            // Function to update active state of buttons
+            // Function to update active state of operation and difficulty buttons
             function updateActiveButton(buttons, activeId) {
                 buttons.forEach(btn => {
                     if (btn.id === activeId) {
@@ -273,168 +296,292 @@
             function updateInstructions() {
                 if (currentOperation === 'add') {
                     instructionsText.innerHTML = `かずをかぞえて、こたえをかこう！<br>ぜんぶ同じ数字を足すよ！`;
-                } else {
+                } else if (currentOperation === 'subtract') {
                     instructionsText.innerHTML = `かずをかぞえて、こたえをかこう！<br>ぜんぶ同じ数字を引くよ！`;
+                } else if (currentOperation === 'multiply') {
+                    instructionsText.innerHTML = `かずをかぞえて、こたえをかこう！<br>ぜんぶ同じ数字をかけるよ！`;
                 }
             }
 
-            // Function to update visibility of addend select based on difficulty
-            function updateAddendSelectVisibility() {
-                if (currentDifficulty === 'level3') {
-                    addendSelectContainer.style.display = 'none'; // Hide for Level 3
+            // Function to update visibility and options of addend select based on difficulty and operation
+            function updateAddendSelect() {
+                // Clear existing options
+                selectAddend.innerHTML = '';
+                // Update label
+                if (currentOperation === 'multiply') {
+                    addendSelectLabel.textContent = 'かける数字（段）を選んでね:';
                 } else {
-                    addendSelectContainer.style.display = 'flex'; // Show for Level 1/2
+                    addendSelectLabel.textContent = '足す（引く）数字を選んでね:';
+                }
+
+                // Hide select for levels where right operand is random
+                const hideSelect = (
+                    (currentDifficulty === 'level3' && (currentOperation === 'add' || currentOperation === 'subtract')) ||
+                    (currentDifficulty === 'level3' && currentOperation === 'multiply') ||
+                    (currentDifficulty === 'level4' && currentOperation === 'multiply') ||
+                    (currentDifficulty === 'level5' && currentOperation === 'multiply')
+                );
+
+                if (hideSelect) {
+                    addendSelectContainer.style.display = 'none';
+                } else {
+                    addendSelectContainer.style.display = 'flex';
+                    // Populate options
+                    for (let i = 1; i <= 9; i++) {
+                        const option = document.createElement('option');
+                        option.value = i;
+                        option.textContent = i;
+                        // Default selection logic: try to preserve current selection if possible, otherwise set a default
+                        const currentlySelectedValue = parseInt(selectAddend.dataset.selectedValue || (currentOperation === 'multiply' ? '1' : '3'));
+                        if (i === currentlySelectedValue) {
+                            option.selected = true;
+                        }
+                        selectAddend.appendChild(option);
+                    }
+                    // Store the selected value so it can be re-selected if options are re-populated
+                    selectAddend.dataset.selectedValue = selectAddend.value;
                 }
             }
 
-            // 問題を生成する関数
+            // Function to enable/disable difficulty buttons based on current operation
+            function updateDifficultyButtonsState() {
+                const isMultiply = (currentOperation === 'multiply');
+                level4Button.disabled = !isMultiply;
+                level5Button.disabled = !isMultiply;
+
+                // Ensure the active difficulty button is valid for the current operation
+                if (!isMultiply && (currentDifficulty === 'level4' || currentDifficulty === 'level5')) {
+                    currentDifficulty = 'level1'; // Revert to Level 1 if an invalid level is active
+                }
+                updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], `${currentDifficulty}Button`);
+            }
+
+            // Function to update the grid display based on difficulty
+            function updateProblemGridDisplay() {
+                // Level 1 multiplication is 9 sequential problems, Level 2 multiplication is 9 random problems.
+                // Both should be vertical layout.
+                if (currentOperation === 'multiply' && (currentDifficulty === 'level1' || currentDifficulty === 'level2')) {
+                    problemsContainer.classList.add('vertical-layout');
+                } else { // All other cases (Add/Sub and Mult L3/4/5) are 2-column layout
+                    problemsContainer.classList.remove('vertical-layout');
+                }
+            }
+
+            // Main problem generation function
             function generateProblems() {
                 problemsContainer.innerHTML = ''; // Clear container
-                const selectedOperand2 = parseInt(selectAddend.value); // Selected from dropdown (used for L1/L2)
-                const operator = currentOperation === 'add' ? '+' : '-';
-                const numberOfProblems = 20;
+                const selectedOperand2 = parseInt(selectAddend.value) || 1; // Default to 1 if select is hidden/empty
+                let numberOfProblemsToGenerate = 20; // Default number of problems
 
-                let generatedProblems = []; // Stores {left, right, op} for final display
-                let lastTwoLeftOperands = []; // To prevent immediate repetition of left operand
+                let rawProblems = []; // Stores the problems before non-consecutive logic
+                let finalProblemsToDisplay = []; // Declared here to ensure it's always available
 
-                // If Level 1 Addition, prepare the fixed pool [1,1,2,2,...,10,10]
-                let level1AddFixedPool = [];
-                if (currentDifficulty === 'level1' && currentOperation === 'add') {
-                    for (let i = 1; i <= 10; i++) {
-                        level1AddFixedPool.push(i);
-                        level1AddFixedPool.push(i);
+
+                // --- Step 1: Generate the raw problems based on difficulty/operation ---
+                if (currentOperation === 'add') {
+                    if (currentDifficulty === 'level1') {
+                        // Level 1 Add: 1-10 x2 fixed (20 problems)
+                        let pool = [];
+                        for (let i = 1; i <= 10; i++) { pool.push(i); pool.push(i); }
+                        shuffleArray(pool);
+                        rawProblems = pool.map(left => ({ left: left, right: selectedOperand2, op: '+' }));
+                    } else if (currentDifficulty === 'level2') {
+                        // Level 2 Add: 1-20 random (20 problems)
+                        for (let i = 0; i < 20; i++) {
+                            rawProblems.push({ left: Math.floor(Math.random() * 20) + 1, right: selectedOperand2, op: '+' });
+                        }
+                    } else if (currentDifficulty === 'level3') {
+                        // Level 3 Add: Left 1-20 random, Right 1-9 random (20 problems)
+                        for (let i = 0; i < 20; i++) {
+                            let left = Math.floor(Math.random() * 20) + 1;
+                            let right = Math.floor(Math.random() * 9) + 1;
+                            rawProblems.push({ left: left, right: right, op: '+' });
+                        }
                     }
-                    shuffleArray(level1AddFixedPool); // Shuffle this specific pool once
+                } else if (currentOperation === 'subtract') {
+                    let minBaseLeft, maxBaseLeft;
+                    if (currentDifficulty === 'level1') { minBaseLeft = 1; maxBaseLeft = 10; }
+                    else { minBaseLeft = 1; maxBaseLeft = 20; } // Level 2 or 3 Subtract
+
+                    for (let i = 0; i < 20; i++) { // Always 20 problems for subtract
+                        let currentRightOperandForSub;
+                        if (currentDifficulty !== 'level3') {
+                            currentRightOperandForSub = selectedOperand2;
+                        } else {
+                            currentRightOperandForSub = Math.floor(Math.random() * 9) + 1;
+                        }
+
+                        let leftCandidatesForSub = [];
+                        for (let j = minBaseLeft; j <= maxBaseLeft; j++) {
+                            if (j >= currentRightOperandForSub) { // Ensure no negative results
+                                leftCandidatesForSub.push(j);
+                            }
+                        }
+
+                        if (leftCandidatesForSub.length === 0) {
+                            problemsContainer.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; font-size: 18pt; padding: 20px; color: #ff0000;">この設定では問題を作成できません。引く数字を小さくしてください。</div>`;
+                            return;
+                        }
+                        rawProblems.push({ left: leftCandidatesForSub[Math.floor(Math.random() * leftCandidatesForSub.length)], right: currentRightOperandForSub, op: '-' });
+                    }
+                } else if (currentOperation === 'multiply') {
+                    if (currentDifficulty === 'level1') {
+                        // Level 1 Mult: Left fixed (selected), Right 1-9 sequential (9 problems)
+                        numberOfProblemsToGenerate = 9; // Set to 9 for this level
+                        for (let i = 0; i < 9; i++) { // Loop 9 times
+                            rawProblems.push({ left: selectedOperand2, right: i + 1, op: 'x' }); // 1 to 9 sequentially
+                        }
+                    } else if (currentDifficulty === 'level2') {
+                        // Level 2 Mult: Left fixed (selected), Right 1-9 random (9 problems)
+                        numberOfProblemsToGenerate = 9; // Set to 9 for this level
+                        let rightOperands = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                        shuffleArray(rightOperands); // Shuffle 1-9 once
+                        for (let i = 0; i < 9; i++) { // Loop 9 times
+                            rawProblems.push({ left: selectedOperand2, right: rightOperands[i], op: 'x' });
+                        }
+                    } else { // Level 3, 4, 5 Multiply (unique problems, up to 20)
+                        let uniqueCombinationsPool = [];
+                        let minLeft, maxLeft;
+                        if (currentDifficulty === 'level3') { minLeft = 2; maxLeft = 5; }
+                        else if (currentDifficulty === 'level4') { minLeft = 6; maxLeft = 9; }
+                        else { minLeft = 2; maxLeft = 9; } // Level 5
+
+                        for (let left = minLeft; left <= maxLeft; left++) {
+                            for (let right = 1; right <= 9; right++) {
+                                uniqueCombinationsPool.push({ left: left, right: right, op: 'x' });
+                            }
+                        }
+                        shuffleArray(uniqueCombinationsPool);
+                        rawProblems = uniqueCombinationsPool.slice(0, Math.min(20, uniqueCombinationsPool.length));
+                        numberOfProblemsToGenerate = rawProblems.length; // Set to actual count of unique problems (max 20)
+                    }
                 }
 
-                for (let k = 0; k < numberOfProblems; k++) {
-                    let currentLeftOperand;
-                    let currentRightOperand;
+                // --- Step 2: Apply the "no consecutive left operand" constraint and finalize for display ---
+                // For Multiply Level 1 and Level 2, skip the non-consecutive logic entirely as left operand is constant.
+                if (currentOperation === 'multiply' && (currentDifficulty === 'level1' || currentDifficulty === 'level2')) {
+                    finalProblemsToDisplay = rawProblems; // Directly use rawProblems
+                } else {
+                    let remainingProblemsInPool = [...rawProblems]; // Copy to modify as we pick
+                    let lastTwoLeftOperands = []; // Reset for this specific step
 
-                    // Determine the right operand for the current problem
-                    if (currentDifficulty === 'level3') {
-                        currentRightOperand = Math.floor(Math.random() * 9) + 1; // Random 1-9 for Level 3
-                    } else {
-                        currentRightOperand = selectedOperand2; // Fixed from dropdown for L1/L2
-                    }
+                    for (let i = 0; i < numberOfProblemsToGenerate; i++) { // Loop up to numberOfProblemsToGenerate
+                        let chosenProblem = null;
+                        let candidatesForPick = [];
 
-                    // Build a temporary list of eligible left operands for *this specific pick*
-                    let candidatesForThisPick = [];
-                    if (currentDifficulty === 'level1' && currentOperation === 'add') {
-                        // For Level 1 Addition, draw from the remaining fixed pool
-                        candidatesForThisPick = [...level1AddFixedPool];
-                    } else {
-                        // For other modes, generate from the base range
-                        let minBaseRange, maxBaseRange;
-                        if (currentDifficulty === 'level1') { // This covers Level 1 Subtract
-                            minBaseRange = 1;
-                            maxBaseRange = 10;
-                        } else { // Level 2 or Level 3
-                            minBaseRange = 1;
-                            maxBaseRange = 20;
+                        // Filter remaining problems for non-consecutive left operand
+                        candidatesForPick = remainingProblemsInPool.filter(p => !lastTwoLeftOperands.includes(p.left));
+
+                        if (candidatesForPick.length > 0) {
+                            chosenProblem = candidatesForPick[Math.floor(Math.random() * candidatesForPick.length)];
+                        } else if (remainingProblemsInPool.length > 0) {
+                            chosenProblem = remainingProblemsInPool[Math.floor(Math.random() * remainingProblemsInPool.length)];
+                        } else {
+                            break;
                         }
-                        for (let i = minBaseRange; i <= maxBaseRange; i++) {
-                            candidatesForThisPick.push(i);
+
+                        finalProblemsToDisplay.push(chosenProblem);
+
+                        // Remove the chosen problem from the pool of remaining problems
+                        // Use findIndex with a comparison function for objects in array
+                        const indexInRemaining = remainingProblemsInPool.findIndex(p => p === chosenProblem); // Find the exact object instance
+                        if (indexInRemaining > -1) {
+                            remainingProblemsInPool.splice(indexInRemaining, 1);
+                        }
+
+                        // Update lastTwoLeftOperands
+                        lastTwoLeftOperands.push(chosenProblem.left);
+                        if (lastTwoLeftOperands.length > 2) {
+                            lastTwoLeftOperands.shift();
                         }
                     }
 
-                    // Apply subtraction constraint: left operand must be >= right operand
-                    let validNumbersForOperation = candidatesForThisPick.filter(num => {
-                        if (currentOperation === 'subtract') {
-                            return num >= currentRightOperand;
-                        }
-                        return true;
-                    });
-
-                    if (validNumbersForOperation.length === 0) {
-                        // Display error if no valid numbers can be picked for subtraction
-                        const noProblemDiv = document.createElement('div');
-                        noProblemDiv.style.gridColumn = '1 / -1'; // Span across all columns
-                        noProblemDiv.style.textAlign = 'center';
-                        noProblemDiv.style.fontSize = '18pt';
-                        noProblemDiv.style.padding = '20px';
-                        noProblemDiv.style.color = '#ff0000';
-                        noProblemDiv.innerHTML = `この設定では問題を作成できません。引く数字を小さくしてください。`;
-                        problemsContainer.appendChild(noProblemDiv);
-                        return; // Stop problem generation
+                    // Ensure exactly numberOfProblemsToGenerate are displayed
+                    while (finalProblemsToDisplay.length < numberOfProblemsToGenerate) {
+                         // Add problems from rawProblems as fallback if needed to reach target, accepting repetitions
+                        // Pick a random problem from the original rawProblems to fill remaining slots
+                        finalProblemsToDisplay.push(rawProblems[Math.floor(Math.random() * rawProblems.length)]);
                     }
+                    finalProblemsToDisplay = finalProblemsToDisplay.slice(0, numberOfProblemsToGenerate);
+                }
 
-                    // Apply "no same number in last two" constraint for the left operand
-                    let finalCandidatesForPick = validNumbersForOperation.filter(num => !lastTwoLeftOperands.includes(num));
-
-                    if (finalCandidatesForPick.length > 0) {
-                        currentLeftOperand = finalCandidatesForPick[Math.floor(Math.random() * finalCandidatesForPick.length)];
-                    } else {
-                        // Fallback: If avoiding last two is impossible (e.g., small pool), pick any valid number
-                        currentLeftOperand = validNumbersForOperation[Math.floor(Math.random() * validNumbersForOperation.length)];
-                    }
-
-                    generatedProblems.push({
-                        left: currentLeftOperand,
-                        right: currentRightOperand,
-                        op: operator
-                    });
-
-                    // For Level 1 Addition, remove the chosen number from its unique pool
-                    if (currentDifficulty === 'level1' && currentOperation === 'add') {
-                         const indexInPool = level1AddFixedPool.indexOf(currentLeftOperand);
-                         if (indexInPool > -1) {
-                             level1AddFixedPool.splice(indexInPool, 1);
-                         }
-                    }
-
-                    // Update lastTwoLeftOperands
-                    lastTwoLeftOperands.push(currentLeftOperand);
-                    if (lastTwoLeftOperands.length > 2) {
-                        lastTwoLeftOperands.shift();
-                    }
-                } // End of for loop for generating 20 problems
 
                 // Display the generated problems
-                generatedProblems.forEach(problem => {
+                finalProblemsToDisplay.forEach(problem => {
                     const problemDiv = document.createElement('div');
                     problemDiv.classList.add('problem');
-                    problemDiv.innerHTML = `<span>${problem.left}</span> ${problem.op} ${problem.right} = _______`;
+                    problemDiv.innerHTML = `<span>${problem.left}</span> ${problem.op} <span>${problem.right}</span> = _______`;
                     problemsContainer.appendChild(problemDiv);
                 });
-            }
+
+                // Update grid display after problems are generated
+                updateProblemGridDisplay();
+            } // End of generateProblems function
 
             // Event Listeners for operation buttons
             addOperationButton.addEventListener('click', () => {
                 currentOperation = 'add';
-                updateActiveButton([addOperationButton, subtractOperationButton], 'addOperation');
+                updateActiveButton([addOperationButton, subtractOperationButton, multiplyOperationButton], 'addOperation');
                 updateInstructions();
+                updateAddendSelect();
+                updateDifficultyButtonsState();
                 generateProblems();
             });
 
             subtractOperationButton.addEventListener('click', () => {
                 currentOperation = 'subtract';
-                updateActiveButton([addOperationButton, subtractOperationButton], 'subtractOperation');
+                updateActiveButton([addOperationButton, subtractOperationButton, multiplyOperationButton], 'subtractOperation');
                 updateInstructions();
+                updateAddendSelect();
+                updateDifficultyButtonsState();
+                generateProblems();
+            });
+
+            multiplyOperationButton.addEventListener('click', () => {
+                currentOperation = 'multiply';
+                updateActiveButton([addOperationButton, subtractOperationButton, multiplyOperationButton], 'multiplyOperation');
+                updateInstructions();
+                updateAddendSelect(); // This will also update options for multiplier
+                updateDifficultyButtonsState();
                 generateProblems();
             });
 
             // Event Listeners for difficulty buttons
             level1Button.addEventListener('click', () => {
                 currentDifficulty = 'level1';
-                updateActiveButton([level1Button, level2Button, level3Button], 'level1Button');
-                updateAddendSelectVisibility(); // Update visibility
+                updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], 'level1Button');
+                updateAddendSelect(); // Update visibility and options
                 generateProblems();
             });
 
             level2Button.addEventListener('click', () => {
                 currentDifficulty = 'level2';
-                updateActiveButton([level1Button, level2Button, level3Button], 'level2Button');
-                updateAddendSelectVisibility(); // Update visibility
+                updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], 'level2Button');
+                updateAddendSelect(); // Update visibility and options
                 generateProblems();
             });
 
-            level3Button.addEventListener('click', () => { // New Level 3 button
+            level3Button.addEventListener('click', () => {
                 currentDifficulty = 'level3';
-                updateActiveButton([level1Button, level2Button, level3Button], 'level3Button');
-                updateAddendSelectVisibility(); // Update visibility
+                updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], 'level3Button');
+                updateAddendSelect(); // Update visibility and options
                 generateProblems();
             });
+
+            level4Button.addEventListener('click', () => {
+                currentDifficulty = 'level4';
+                updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], 'level4Button');
+                updateAddendSelect(); // Update visibility and options
+                generateProblems();
+            });
+
+            level5Button.addEventListener('click', () => {
+                currentDifficulty = 'level5';
+                updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], 'level5Button');
+                updateAddendSelect(); // Update visibility and options
+                generateProblems();
+            });
+
 
             // Event Listener for the addend selection
             selectAddend.addEventListener('change', generateProblems);
@@ -443,10 +590,12 @@
             refreshProblemsButton.addEventListener('click', generateProblems);
 
             // Initial calls on DOMContentLoaded
-            updateActiveButton([level1Button, level2Button, level3Button], 'level1Button'); // デフォルトはレベル1をアクティブに
-            updateAddendSelectVisibility(); // Initial visibility
-            generateProblems();
+            updateActiveButton([addOperationButton, subtractOperationButton, multiplyOperationButton], 'addOperation'); // Default to Addition
+            updateActiveButton([level1Button, level2Button, level3Button, level4Button, level5Button], 'level1Button'); // Default to Level 1
             updateInstructions();
+            updateAddendSelect(); // Initial setup for select visibility and options
+            updateDifficultyButtonsState(); // Initial state of L4/L5 buttons
+            generateProblems(); // Call generate problems initially
         });
     </script>
 </body>
